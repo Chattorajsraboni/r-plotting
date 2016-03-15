@@ -1,0 +1,270 @@
+---
+title: "beautiful-ggplot2"
+author: "hannarud"
+date: "March 10, 2016"
+output: html_document
+---
+
+Following the <http://www.analyticsvidhya.com/blog/2016/03/questions-ggplot2-package-r/> article content.
+
+### Data Set
+
+In this article, I have used the data set from Big Mart Sales Prediction. Data is available for download at <http://datahack.analyticsvidhya.com/contest/practice-problem-bigmart-sales-prediction>.
+
+```{r}
+path <- "D:/R Plotting/r-plotting"
+setwd(path)
+```
+
+Load Data
+```{r}
+train <- read.csv("Train_UWu5bXk.csv")
+```
+
+Look at data
+```{r}
+str(train)
+```
+
+Check variable classes
+```{r}
+sapply(train, class)
+```
+
+Install and Load Library
+```{r}
+library(ggplot2)
+```
+
+# Q1. How to create a Scatter Plot?
+
+When to use: Scatter Plot is used when want to see the relationship between two continuous variables.
+```{r}
+ggplot(train, aes(Item_Visibility, Item_MRP)) + geom_point() + 
+  scale_x_continuous("Item Visibility", breaks = seq(0,0.35,0.05)) +
+  scale_y_continuous("Item MRP", breaks = seq(0,270,by = 30)) +
+  theme_bw()
+```
+
+Let’s quickly understand the structure of ggplot code:
+* `aes` – refers to aesthetics. It includes variable names used to create plots.
+* `geom_point` – ggplot offers many ‘geoms’ which are used to represent data. Since, we are interested here in scatter plot, we used geom_points.
+* `scale_x_continuous` – x variable is continuous. This parameter is used to alter information represented at x axis.
+* `scale_y_continuous` – It performs the same task as scale_x_continuous but for y axis.
+* `theme_bw` – It refers to setting the background of plots. I used the grid version.
+
+We can also add a categorical variable (`Item_Type`) in the current plot. Do check the data to get familiar with the available in the data set.
+```{r}
+ggplot(train, aes(Item_Visibility, Item_MRP)) + geom_point(aes(color = Item_Type)) + 
+  scale_x_continuous("Item Visibility", breaks = seq(0,0.35,0.05)) +
+  scale_y_continuous("Item MRP", breaks = seq(0,270,by = 30)) +
+  theme_bw() + labs(title="Scatterplot")
+```
+
+We can even make it better by creating separate scatter plot for separate Item_Type.
+```{r}
+ggplot(train, aes(Item_Visibility, Item_MRP)) + geom_point(aes(color = Item_Type)) + 
+  scale_x_continuous("Item Visibility", breaks = seq(0,0.35,0.05)) +
+  scale_y_continuous("Item MRP", breaks = seq(0,270,by = 30)) + 
+  theme_bw() + labs(title="Scatterplot") + facet_wrap( ~ Item_Type)
+```
+
+At your end, you need to ‘zoom’ this graph for a clear view. The zoomed version looks like this. In this case, the parameter `facet_wrap` does the trick. It wraps facet in rectangular layout.
+
+# Q2. How to create a Histogram?
+
+When to use: Histogram is used when we want to plot one continuous variable.
+```{r}
+ggplot(train, aes(Item_MRP)) + geom_histogram(binwidth = 2) +
+  scale_x_continuous("Item MRP", breaks = seq(0,270,by = 30)) +
+  scale_y_continuous("Count", breaks = seq(0,200,by = 20)) +
+  labs(title = "Histogram")
+```
+
+Add colours
+
+```{r}
+ggplot(train, aes(Item_MRP)) + geom_histogram(binwidth = 2, aes(color = Item_Type)) +
+  scale_x_continuous("Item MRP", breaks = seq(0,270,by = 30)) +
+  scale_y_continuous("Count", breaks = seq(0,200,by = 20)) +
+  labs(title = "Histogram")
+```
+
+# Q3. How to create a  Bar Chart?
+
+When to use: Bar Chart is used when we want to plot a categorical variable or a combination of continuous and categorical variable.
+
+Bar chart with one variable
+```{r}
+ggplot(train, aes(Outlet_Establishment_Year)) + geom_bar(fill = "red") +
+  theme_bw() + scale_x_continuous("Establishment Year", breaks = seq(1985,2010)) + 
+  scale_y_continuous("Count", breaks = seq(0,1500,150)) +
+  coord_flip()+ labs(title = "Bar Chart") + theme_gray()
+```
+
+You can remove `coord_flip()` parameter to get this bar chart vertically. As you can see, I tried a different theme for this plot. You are always welcome to become experimental while using ggplot package.
+
+Bar Chart with 2 variables
+```{r}
+ggplot(train, aes(Item_Type, Item_Weight)) + geom_bar(stat = "identity", fill = "darkblue") +
+  scale_x_discrete("Outlet Type") +
+  scale_y_continuous("Item Weight", breaks = seq(0,15000, by = 500)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  labs(title = "Bar Chart")
+```
+
+You can zoom this graph at your end for a better visual. In this graph, I used categorical vs continuous variable on x and y axis respectively.
+
+# Q4. How to create a Stack Bar Chart?
+
+When to use: It’s an advanced version of a Bar Chart. It used when we wish to visualize a combination of categorical variables.
+```{r}
+ggplot(train, aes(Outlet_Location_Type, fill = Outlet_Type)) + geom_bar() +
+  labs(title = "Stacked Bar Chart", x = "Outlet Location Type", y = "Count of Outlets")
+```
+
+# Q5. How to create a Box Plot?
+
+When to use: Box Plots are used to plot a combination of categorical and continuous variables. This plot helps us to identify data distribution and detect outliers.
+```{r}
+ggplot(train, aes(Outlet_Identifier, Item_Outlet_Sales)) + geom_boxplot(fill = "red") +
+  scale_y_continuous("Item Outlet Sales", breaks= seq(0,15000, by=500)) +
+  labs(title = "Box Plot", x = "Outlet Identifier")
+```
+
+The black points are outliers. Outlier detection and removal is an essential step of successful data exploration. Learn more about Outlier Detection from this guide.
+
+# Q6. How to create an Area Chart?
+
+When to use: Area chart is used to show continuity across a variable or data set. It’s quite similar to a line chart. It is commonly used for time series plots. Alternatively, it is used to plot continuous variables and analyze the underlying trends.
+```{r}
+ggplot(train, aes(Item_Outlet_Sales)) + geom_area(stat = "bin", bins = 30, fill = "steelblue") +
+  scale_x_continuous(breaks = seq(0,11000,1000)) +
+  labs(title = "Area Chart", x = "Item Outlet Sales", y = "Count")
+```
+
+# Q7. How to create a heat map?
+
+When to use: Heat Map uses intensity (density) of colors to display relationship between two or three or many variables in a two dimensional image.
+```{r}
+ggplot(train, aes(Outlet_Identifier, Item_Type)) + geom_raster(aes(fill = Item_MRP)) +
+  labs(title ="Heat Map", x = "Outlet Identifier", y = "Item Type") +
+  scale_fill_continuous(name = "Item MRP")
+```
+
+You can zoom this plot at your end for a better visual. The dark portion indicates Item MRP is close 50. The brighter portion indicates Item MRP is close to 250.
+
+Heat Maps can also produce visuals used for image recognition. This can be done by adding a parameter as `interpolate = TRUE`.
+```{r}
+ggplot(train, aes(Outlet_Identifier, Item_Type)) + 
+  geom_raster(aes(fill = Item_MRP), interpolate = T) +
+  labs(title ="Heat Map", x = "Outlet Identifier", y = "Item Type") +
+  scale_fill_continuous(name = "Item MRP")
+```
+
+# Q8. How to create a Correlogram?
+
+When to use: Correlogram is used to test the level of correlation among the variable available in the data set.
+
+To create a correlogram, I’ve used corrgram package instead of ggplot. I realized creating correlogram using its dedicated package is much easier than using ggplot.
+```{r}
+library(corrgram)
+corrgram(train, order=NULL, panel=panel.shade, text.panel=panel.txt, main="Correlogram")
+```
+
+It’s quite easy to interpret too. Darker the color, higher the correlation between variables. Blue indicates positive correlation. Red indicates negative correlation. Color intensity indicates the magnitude of correlation.
+
+# Q9. How to plot a geographical map?
+
+When to use: Maps are commonly used to visualize certain factor been influenced geographically. It’s easy to plot maps in R.
+
+Let’s plot the countries participating in ICC World T20 World Cup 2016. After I did my research, I found there are 16 countries participating this year. Let’s see where these countries are located on the world map.
+
+We’ll use `ggmap` package along with `ggplot` for creating these maps.
+```{r}
+library(ggmap)
+```
+
+List of Countries
+```{r}
+ICC_WC_T20 <- c("Australia",
+                "WestIndies",
+                "India",
+                "SriLanka",
+                "Pakistan",
+                "Bangladesh",
+                "NewZealand",
+                "SouthAfrica",
+                "England",
+                "HongKong",
+                "Zimbabwe",
+                "Afghanistan",
+                "Scotland",
+                "Netherlands",
+                "Ireland",
+                "Oman")
+```
+
+Extract geo location of these countries
+```{r}
+countries <- geocode(ICC_WC_T20)
+```
+
+Map longitude and latitude in separate variables
+```{r}
+nation.x <- countries$lon
+nation.y <- countries$lat
+```
+
+Using ggplot
+Plot the world map
+```{r}
+mapWorld <- borders("world", colour="grey", fill="lightblue")
+```
+
+Add data points to the world map
+```{r}
+ggplot() + mapWorld + geom_point(aes(x=nation.x, y=nation.y) ,color="red", size=3)
+```
+
+It was easy. Isn’t it? We can still embellish this map.  If you are not familiar with world map, it would be difficult for you to identify countries name. Let’s use functions from ggmap() package and redesign this map.
+
+Using ggmaps extract world map
+```{r}
+world_map <- qmap("World", zoom = 2)
+```
+
+See how map looks
+```{r}
+world_map
+```
+
+Plot the data on map
+```{r}
+world_map + geom_point(aes(x=nation.x, y=nation.y), data = countries, alpha = 0.5,
+                       size = 3, color = "red")
+```
+
+This looks better. `ggmap()` package is linked with Google map and hence extracts location detail directly. But I have one regret. If you carefully watch this map, you’ll realize this map is incomplete. West Indies isn’t shown on this map. I tried extracting data from multiple source, but couldn’t succeed in this matter. If any of you happens to solve this riddle, do share your solution.
+
+# Q10. How to plot a data set in single command?
+
+Everyone of us tries doing this step at some point in time. We all look for one command using which we can plot all variables in the data set at once. Here’s your answer.
+
+You can use `tabplot()` package to accomplish this feat.
+
+Plot data
+```{r}
+library(tabplot)
+tableplot(train)
+```
+
+# End Notes
+
+This end of a colorful journey! I hope it enables people to starts several new colorful journeys. You might have noticed that using `ggplot2` is a lot easier. Most of the codes are repetitive, hence you will quickly get used to it. You need to be careful about picking up “geoms” for the charts, because that’s the main design element. When I started learning this package, I asked all these questions at different point in time. Hence, the idea to line up all questions in one article came to me.
+
+In this article, I discussed 9 types of different visualizations which can be plotted using ggplot package. These visualizations are best used depending on the type of variable supplied to them. Hence, you must be careful about the type of variable you wish to plot.
+
+Did you find this article helpful ? Do you use any other package for visualization ? Do share your suggestions / opinions in the comments below.
+
+MANISH SARASWAT
